@@ -1,0 +1,16 @@
+{
+    "name": "redcode/deploy",
+    "description": "Deploy script",
+    "keywords": ["deploy", "unix", "vcs"],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Andrew Reddikh",
+            "email": "mazahaco@gmail.com"
+    	}
+    ],
+    "minimum-stability": "dev",
+    "require": {
+        "php": ">=5.3.3"
+    }
+}
