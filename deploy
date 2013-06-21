@@ -1,0 +1,68 @@
+#!/usr/bin/env php
+<?php
+
+$configFile = './deploy.json';
+$config = [];
+if(file_exists($configFile)) {
+    $config = json_decode(file_get_contents($configFile), true);
+}
+
+if($config['version'] == 'vcs') {
+    if(!isset($config['version-strategy'])) {
+        $config['version-strategy'] = 'merged';
+    }
+
+    $checkGit = (bool)trim(`git branch`) || (bool)trim(`git tag`);
+    if(!$checkGit) {
+        echo "Git error\n";
+        exit(0);
+    }
+
+    switch($config['version-strategy']) {
+        case 'tag':
+            $config['version'] = `git describe --abbrev=0`;
+            break;
+        case 'branch':
+            $config['version'] = `git branch | sed -n '/\* /s///p'`;
+            break;
+        default:
+            $branch = `git branch | sed -n '/\* /s///p'`;
+            $tag = `git describe --abbrev=0`;
+            if(`git rev-parse --verify HEAD` === `git rev-list {$tag} | head -n 1`) {
+                $config['version'] = $tag;
+            }
+            else {
+                $config['version'] = $branch;
+            }
+    }
+}
+
+$user = trim(`whoami`);
+echo "Enter user for deploy. By default user \"{$user}\": ";
+$handle = fopen ("php://stdin","r");
+$input = trim(fgets($handle));
+if($input) {
+    $user = $input;
+}
+
+if(!isset($config['environment']) || !count($config['environment'])) {
+    echo "You should to set section environment in config\n";
+    exit(0);
+}
+
+echo "Enter environment for deploy (\"" . implode(array_keys($config['environment']), '", "') . "\"): ";
+$handle = fopen ("php://stdin","r");
+$input = trim(fgets($handle));
+
+if(!in_array($input, array_keys($config['environment']))) {
+    echo "Incorrect environment entered\n";
+    exit(0);
+}
+$env = $input;
+
+echo "Ready to deploy version {$config['version']}. Are you sure you want to continue? (no):";
+$handle = fopen ("php://stdin","r");
+$input = trim(fgets($handle));
+if(!in_array('y', 'yes', 'yep', 'yeah')) {
+    exit(0);
+}

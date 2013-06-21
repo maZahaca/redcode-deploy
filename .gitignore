@@ -1,0 +1,4 @@
+deploy.json
+/vendor
+.idea
+.DS_STORE
