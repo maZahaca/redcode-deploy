@@ -121,15 +121,12 @@ echo "Package {$buildPath}/{$buildFileName}\n";
 
 `ssh {$user}@{$server} sudo chown {$user}:www-data -R {$config['path']['server']}`;
 `scp {$buildPath}/{$buildFileName} {$user}@{$server}:{$config['path']['server']}`;
-
 if(isset($config['commands']) && isset($config['commands']['before'])) {
     foreach($config['commands']['before'] as $command) {
         `ssh {$user}@{$server} {$command}`;
     }
 }
-
 `ssh {$user}@{$server} tar -xvzf ./{$buildFileName} >> /dev/null`;
-
 if(isset($config['commands']) && isset($config['commands']['after'])) {
     foreach($config['commands']['after'] as $command) {
         `ssh {$user}@{$server} {$command}`;
