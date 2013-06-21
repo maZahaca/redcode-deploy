@@ -7,6 +7,26 @@ if(file_exists($configFile)) {
     $config = json_decode(file_get_contents($configFile), true);
 }
 
+if(!isset($config['path'])) {
+    echo "You should set section \"path\" in config\n";
+    exit(0);
+}
+
+if(!isset($config['path']['local'])) {
+    echo "You should set section \"path\".\"local\" in config\n";
+    exit(0);
+}
+
+if(!isset($config['path']['server'])) {
+    echo "You should set section \"path\".\"server\" in config\n";
+    exit(0);
+}
+
+if(!isset($config['file']) && !isset($config['file']['deploy'])) {
+    echo "You should set section \"file\".\"deploy\" in config\n";
+    exit(0);
+}
+
 if($config['version'] == 'vcs') {
     if(!isset($config['version-strategy'])) {
         $config['version-strategy'] = 'merged';
@@ -56,7 +76,7 @@ if($input) {
 }
 
 if(!isset($config['environment']) || !count($config['environment'])) {
-    echo "You should to set section environment in config\n";
+    echo "You should set section \"environment\" in config\n";
     exit(0);
 }
 
@@ -69,6 +89,7 @@ if(!in_array($input, array_keys($config['environment']))) {
     exit(0);
 }
 $env = $input;
+$server = $config['environment'][$env]['host'];
 
 echo "Ready to deploy version \"{$config['version']}\". Are you sure you want to continue? (no): ";
 $handle = fopen ("php://stdin","r");
@@ -76,4 +97,41 @@ $input = trim(fgets($handle));
 if(!in_array($input, array('y', 'yes', 'yep', 'yeah'))) {
     exit(0);
 }
-echo "Deploy start ...\n";
+
+$buildFileName = "build-{$config['version']}.tgz";
+echo "Creating {$config['pack-type']} package ...\n";
+
+$files = $config['file']['deploy'];
+$exclude = '--exclude=./build ';
+if(isset($config['file']) && isset($config['file']['ignore'])) {
+    $excludeArr = explode(' ', $config['file']['ignore']);
+    $exclude .= implode(' ', array_map(function ($item) { return "--exclude={$item}";}, $excludeArr));
+}
+
+$buildPath = $config['path']['local'] . '/' . 'build/';
+
+`
+if [ ! -d $buildPath ]; then
+    mkdir $buildPath
+fi
+`;
+
+`cd {$config['path']['local']} & tar -cvzf {$buildPath}/{$buildFileName} {$exclude} {$files}`;
+echo "Package {$buildPath}/{$buildFileName}\n";
+
+`ssh {$user}@{$server} sudo chown {$user}:www-data -R {$config['path']['server']}`;
+`scp {$buildPath}/{$buildFileName} {$user}@{$server}:{$config['path']['server']}`;
+
+if(isset($config['commands']) && isset($config['commands']['before'])) {
+    foreach($config['commands']['before'] as $command) {
+        `ssh {$user}@{$server} {$command}`;
+    }
+}
+
+`ssh {$user}@{$server} tar -xvzf ./{$buildFileName} >> /dev/null`;
+
+if(isset($config['commands']) && isset($config['commands']['after'])) {
+    foreach($config['commands']['after'] as $command) {
+        `ssh {$user}@{$server} {$command}`;
+    }
+}
