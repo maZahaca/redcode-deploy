@@ -12,27 +12,37 @@ if($config['version'] == 'vcs') {
         $config['version-strategy'] = 'merged';
     }
 
-    $checkGit = (bool)trim(`git branch`) || (bool)trim(`git tag`);
-    if(!$checkGit) {
-        echo "Git error\n";
-        exit(0);
-    }
+    $branchExist    = (bool)trim(`git branch`);
+    $tagExist       = (bool)trim(`git tag`);
 
     switch($config['version-strategy']) {
         case 'tag':
-            $config['version'] = `git describe --abbrev=0`;
+            if(!$tagExist) {
+                echo "No one tag found\n";
+                exit(0);
+            }
+            $config['version'] = trim(`git describe --abbrev=0`);
             break;
         case 'branch':
-            $config['version'] = `git branch | sed -n '/\* /s///p'`;
+            if(!$branchExist) {
+                echo "No one branch found\n";
+                exit(0);
+            }
+            $config['version'] = trim(`git branch | sed -n '/\* /s///p'`);
             break;
         default:
-            $branch = `git branch | sed -n '/\* /s///p'`;
-            $tag = `git describe --abbrev=0`;
-            if(`git rev-parse --verify HEAD` === `git rev-list {$tag} | head -n 1`) {
-                $config['version'] = $tag;
+            if(!$branchExist && !$tagExist) {
+                echo "Git not initialized\n";
+                exit(0);
             }
-            else {
-                $config['version'] = $branch;
+
+            $config['version'] = trim(`git branch | sed -n '/\* /s///p'`);
+
+            if($tagExist) {
+                $tag = `git describe --abbrev=0`;
+                if(`git rev-parse --verify HEAD` === `git rev-list {$tag} | head -n 1`) {
+                    $config['version'] = $tag;
+                }
             }
     }
 }
@@ -60,9 +70,10 @@ if(!in_array($input, array_keys($config['environment']))) {
 }
 $env = $input;
 
-echo "Ready to deploy version {$config['version']}. Are you sure you want to continue? (no):";
+echo "Ready to deploy version \"{$config['version']}\". Are you sure you want to continue? (no): ";
 $handle = fopen ("php://stdin","r");
 $input = trim(fgets($handle));
-if(!in_array('y', 'yes', 'yep', 'yeah')) {
+if(!in_array($input, array('y', 'yes', 'yep', 'yeah'))) {
     exit(0);
 }
+echo "Deploy start ...\n";
