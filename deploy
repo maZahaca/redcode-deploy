@@ -1,10 +1,14 @@
 #!/usr/bin/env php
 <?php
 
-$configFile = './deploy.json';
+$configFile = getcwd() . '/deploy.json';
 $config = [];
 if(file_exists($configFile)) {
     $config = json_decode(file_get_contents($configFile), true);
+}
+else {
+    echo "deploy.json config not found in path \"{$configFile}\"\n";
+    exit(0);
 }
 
 if(!isset($config['path'])) {
@@ -59,7 +63,7 @@ if($config['version'] == 'vcs') {
             $config['version'] = trim(`git branch | sed -n '/\* /s///p'`);
 
             if($tagExist) {
-                $tag = `git describe --abbrev=0`;
+                $tag = trim(`git describe --abbrev=0`);
                 if(`git rev-parse --verify HEAD` === `git rev-list {$tag} | head -n 1`) {
                     $config['version'] = $tag;
                 }
@@ -116,19 +120,29 @@ if [ ! -d $buildPath ]; then
 fi
 `;
 
-`cd {$config['path']['local']} & tar -cvzf {$buildPath}/{$buildFileName} {$exclude} {$files}`;
-echo "Package {$buildPath}/{$buildFileName}\n";
+`cd {$config['path']['local']} & tar -cvzf {$buildPath}/{$buildFileName} {$exclude} {$files} > /dev/null`;
+echo "Package {$buildPath}/{$buildFileName} created successfully\n";
 
 `ssh {$user}@{$server} sudo chown {$user}:www-data -R {$config['path']['server']}`;
+
+echo "Transferring build ...\n";
 `scp {$buildPath}/{$buildFileName} {$user}@{$server}:{$config['path']['server']}`;
+
+echo "Execute actions before warm up build ...\n";
 if(isset($config['commands']) && isset($config['commands']['before'])) {
     foreach($config['commands']['before'] as $command) {
         `ssh {$user}@{$server} {$command}`;
     }
 }
-`ssh {$user}@{$server} tar -xvzf ./{$buildFileName} >> /dev/null`;
+
+echo "Build is warming up ...\n";
+`ssh {$user}@{$server} sudo tar -xvzf {$config['path']['server']}/{$buildFileName}`;
+
+echo "Execute actions after warm up build ...\n";
 if(isset($config['commands']) && isset($config['commands']['after'])) {
     foreach($config['commands']['after'] as $command) {
         `ssh {$user}@{$server} {$command}`;
     }
 }
+
+`ssh {$user}@{$server} sudo chown www-data:www-data -R {$config['path']['server']}`;
