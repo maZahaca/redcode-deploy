@@ -1,9 +1,10 @@
-redcode-deploy is the easiest way to deploy your code to server
-==============
+## redcode-deploy is the easiest way to deploy your code to server
 
-Steps to start:
-- just create a symlink of deploy.sh to folder with your project. Like: ln -s ../vendor/redcode/deploy/deploy.sh ./deploy.sh
-- create deploy.json file in the same folder. Like in example:
+### Steps to start:
+* Just create a symlink of deploy.sh to folder with your project. 
+<blockquote><p>Like: ln -s ../vendor/redcode/deploy/deploy.sh ./deploy.sh</p></blockquote>
+* Create deploy.json file in the same folder. Like in example:
+<pre><code>
 {
     "version" : "vcs",
     "version-strategy" : "merged",
@@ -32,3 +33,4 @@ Steps to start:
         ]
     }
 }
+</code></pre>
