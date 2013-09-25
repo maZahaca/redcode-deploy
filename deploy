@@ -1,7 +1,8 @@
 #!/usr/bin/env php
 <?php
 
-$configFile = getcwd() . '/deploy.json';
+$localPath = getcwd();
+$configFile = $localPath . '/deploy.json';
 $config = [];
 if(file_exists($configFile)) {
     $config = json_decode(file_get_contents($configFile), true);
@@ -13,11 +14,6 @@ else {
 
 if(!isset($config['path'])) {
     echo "You should set section \"path\" in config\n";
-    exit(0);
-}
-
-if(!isset($config['path']['local'])) {
-    echo "You should set section \"path\".\"local\" in config\n";
     exit(0);
 }
 
@@ -112,7 +108,7 @@ if(isset($config['file']) && isset($config['file']['ignore'])) {
     $exclude .= implode(' ', array_map(function ($item) { return "--exclude={$item}";}, $excludeArr));
 }
 
-$buildPath = $config['path']['local'] . '/' . 'build/';
+$buildPath = $localPath . '/' . 'build/';
 
 `
 if [ ! -d $buildPath ]; then
@@ -120,7 +116,7 @@ if [ ! -d $buildPath ]; then
 fi
 `;
 
-`cd {$config['path']['local']} & tar -cvzf {$buildPath}/{$buildFileName} {$exclude} {$files} > /dev/null`;
+`cd {$localPath} & tar -cvzf {$buildPath}/{$buildFileName} {$exclude} {$files} > /dev/null`;
 echo "Package {$buildPath}/{$buildFileName} created successfully\n";
 
 `ssh {$user}@{$server} sudo chown {$user}:www-data -R {$config['path']['server']}`;
@@ -136,12 +132,12 @@ if(isset($config['commands']) && isset($config['commands']['before'])) {
 }
 
 echo "Build is warming up ...\n";
-`ssh {$user}@{$server} sudo tar -xvzf {$config['path']['server']}/{$buildFileName}`;
+`ssh {$user}@{$server} sudo tar -C {$config['path']['server']} -xvzf {$config['path']['server']}/{$buildFileName}`;
 
 echo "Execute actions after warm up build ...\n";
 if(isset($config['commands']) && isset($config['commands']['after'])) {
     foreach($config['commands']['after'] as $command) {
-        `ssh {$user}@{$server} {$command}`;
+        `ssh {$user}@{$server} {$config['path']['server']}{$command}`;
     }
 }
 
