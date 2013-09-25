@@ -91,7 +91,7 @@ if(!in_array($input, array_keys($config['environment']))) {
 $env = $input;
 $server = $config['environment'][$env]['host'];
 
-echo "Ready to deploy version \"{$config['version']}\". Are you sure you want to continue? (no): ";
+echo "System is ready for deployment version \"{$config['version']}\". Are you sure you want to continue? (no): ";
 $handle = fopen ("php://stdin","r");
 $input = trim(fgets($handle));
 if(!in_array($input, array('y', 'yes', 'yep', 'yeah'))) {
