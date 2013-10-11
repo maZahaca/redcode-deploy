@@ -127,6 +127,8 @@ echo "Transferring build ...\n";
 echo "Execute actions before warm up build ...\n";
 if(isset($config['commands']) && isset($config['commands']['before'])) {
     foreach($config['commands']['before'] as $command) {
+        $command = str_replace('_DIR_', $config['path']['server'], $command);
+        print "> " . $command . "\n";
         `ssh {$user}@{$server} {$command}`;
     }
 }
@@ -137,8 +139,11 @@ echo "Build is warming up ...\n";
 echo "Execute actions after warm up build ...\n";
 if(isset($config['commands']) && isset($config['commands']['after'])) {
     foreach($config['commands']['after'] as $command) {
-        `ssh {$user}@{$server} {$config['path']['server']}{$command}`;
+        $command = str_replace('_DIR_', $config['path']['server'], $command);
+        print "> " . $command . "\n";
+        `ssh {$user}@{$server} {$command}`;
     }
 }
 
 `ssh {$user}@{$server} sudo chown www-data:www-data -R {$config['path']['server']}`;
+print "Done!\n";
