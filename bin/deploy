@@ -1,7 +1,7 @@
 #!/usr/bin/env php
 <?php
 
-$localPath = getcwd();
+$localPath = getcwd() . '/../';
 $configFile = $localPath . '/deploy.json';
 $config = [];
 if(file_exists($configFile)) {
