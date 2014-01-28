@@ -10,7 +10,7 @@
     	}
     ],
     "minimum-stability": "dev",
-    "bin": ["deploy"],
+    "bin": ["bin/deploy"],
     "require": {
         "php": ">=5.3.3"
     }
