@@ -1,7 +1,7 @@
 #!/usr/bin/env php
 <?php
 
-$localPath = getcwd() . '/../';
+$localPath = getcwd();
 $configFile = $localPath . '/deploy.json';
 $config = [];
 if(file_exists($configFile)) {
@@ -66,6 +66,8 @@ if($config['version'] == 'vcs') {
             }
     }
 }
+
+$config['version'] = str_replace(['/', '.'], '-', $config['version']);
 
 $user = trim(`whoami`);
 echo "Enter user for deploy. By default user \"{$user}\": ";
