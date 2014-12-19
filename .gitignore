@@ -1,5 +1,6 @@
 /build
 deploy.json
+deploy.yml
 /vendor
 .idea
 .DS_STORE
