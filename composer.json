@@ -13,11 +13,11 @@
     "bin": ["bin/deploy"],
     "require": {
         "php": ">=5.4.0",
-        "symfony/console": "2.5.*",
+        "symfony/console": ">=2.5",
         "zendframework/zend-validator": "2.3.*",
         "zendframework/zend-inputfilter": "2.3.*",
         "zendframework/zend-servicemanager": ">=2.0",
-        "symfony/yaml": "2.5.*"
+        "symfony/yaml": ">=2.5"
     },
     "autoload": {
         "psr-0": { "RedCode\\Deploy": "src/" }
