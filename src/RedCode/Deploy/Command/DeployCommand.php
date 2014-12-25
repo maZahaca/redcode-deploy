@@ -7,10 +7,14 @@ use RedCode\Deploy\Config;
 use RedCode\Deploy\Connection\Connection;
 use RedCode\Deploy\Package\PackageManager;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Helper\QuestionHelper;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Question\ChoiceQuestion;
+use Symfony\Component\Console\Question\ConfirmationQuestion;
+use Symfony\Component\Console\Question\Question;
 use Symfony\Component\Yaml\Yaml;
 
 /**
@@ -50,6 +54,8 @@ class DeployCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
+        /** @var QuestionHelper $helper */
+        $helper = $this->getHelper('question');
         $config = $this->getConfig();
         $config['package']['type'] = 'tar';
         $config['version'] = str_replace(['/', '.'], '-', $config['version']);
@@ -57,32 +63,48 @@ class DeployCommand extends Command
         $user = $input->getOption('user');
         if(!$user) {
             $user = trim(`whoami`);
-            $output->writeln(sprintf('Enter user which you want use for deploy. By default user "%s": ', $user));
-            $readLn = trim(fgets(STDIN));
-            if ($readLn) {
-                $user = $readLn;
-            }
+            $user = $helper->ask(
+                $input,
+                $output,
+                (new Question(
+                    sprintf('Enter user which you want use for deploy. By default user "%s": ', $user),
+                    $user
+                ))
+            );
         }
 
         $env = $input->getOption('env');
         if(count($config['environment']) > 1 && empty($env)) {
             $envNames = array_keys($config['environment']);
-            $output->writeln("Enter environment for deploy (\"" . implode($envNames, '", "') . "\"): ");
-            $readLn = trim(fgets(STDIN));
-
-            if (!in_array($readLn, $envNames)) {
-                throw new \Exception('Incorrect environment entered');
-            }
-            $env = $readLn;
+            $env = $helper->ask(
+                $input,
+                $output,
+                (new ChoiceQuestion(
+                    "Enter environment for deploy (\"" . implode($envNames, '", "') . "\"): ",
+                    $envNames,
+                    false
+                ))
+                ->setValidator(function ($answer) {
+                    if (trim($answer) == '') {
+                        throw new \RuntimeException(
+                            'The value of the environment should be specified'
+                        );
+                    }
+                    return $answer;
+                })
+                ->setMaxAttempts(2)
+            );
         }
         if(empty($env)) {
             $env = key($config['environment']);
         }
         $server = $config['environment'][$env];
 
-        $output->writeln(sprintf('System is ready for deployment of version "%s". Are you sure you want to continue? (no):', $config['version']));
-        $readLn = trim(fgets(STDIN));
-        if (!in_array($readLn, array('y', 'yes', 'yep', 'yeah', 'yup'))) {
+        if(!$helper->ask(
+            $input,
+            $output,
+            new ConfirmationQuestion(sprintf('System is ready for deployment of version "%s". Are you sure you want to continue?:', $config['version']))
+        )) {
             return;
         }
 
