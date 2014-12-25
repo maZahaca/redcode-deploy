@@ -1,13 +1,17 @@
 {
     "name": "redcode/deploy",
     "description": "Easy deploy script for php-based projects",
-    "keywords": ["deploy", "unix", "vcs", "git", "project", "build", "tar", "php"],
+    "keywords": ["deploy", "unix", "vcs", "git", "project", "build", "tar", "php", "environment"],
     "license": "MIT",
     "authors": [
         {
             "name": "Andrew Reddikh",
             "email": "andrew@reddikh.com"
-    	}
+    	},
+        {
+            "name": "RedCode",
+            "homepage": "http://redcode.im"
+        }
     ],
     "minimum-stability": "stable",
     "bin": ["bin/deploy"],
