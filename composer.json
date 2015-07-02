@@ -1,17 +1,29 @@
 {
     "name": "redcode/deploy",
-    "description": "Deploy script",
-    "keywords": ["deploy", "unix", "vcs"],
+    "description": "Easy deploy script for php-based projects",
+    "keywords": ["deploy", "unix", "vcs", "git", "project", "build", "tar", "php", "environment"],
     "license": "MIT",
     "authors": [
         {
             "name": "Andrew Reddikh",
-            "email": "mazahaco@gmail.com"
-    	}
+            "email": "andrew@reddikh.com"
+    	},
+        {
+            "name": "RedCode",
+            "homepage": "http://redcode.im"
+        }
     ],
-    "minimum-stability": "dev",
+    "minimum-stability": "stable",
     "bin": ["bin/deploy"],
     "require": {
-        "php": ">=5.3.3"
+        "php": ">=5.4.0",
+        "symfony/console": ">=2.5",
+        "zendframework/zend-validator": "2.3.*",
+        "zendframework/zend-inputfilter": "2.3.*",
+        "zendframework/zend-servicemanager": ">=2.0",
+        "symfony/yaml": ">=2.5"
+    },
+    "autoload": {
+        "psr-0": { "RedCode\\Deploy": "src/" }
     }
 }
